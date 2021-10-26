@@ -6,6 +6,7 @@ class Crawler(private val seedUrl: String) {
     fun start() {
         val seedHtml: String = retrieveWebsiteContents(seedUrl)
         val urls: Set<String> = htmlParser.findUrls(seedHtml)
+        println(urls)
     }
 
     private fun retrieveWebsiteContents(url: String): String {
