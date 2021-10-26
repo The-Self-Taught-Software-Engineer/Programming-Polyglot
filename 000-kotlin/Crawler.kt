@@ -1,8 +1,11 @@
 import java.net.URL
 
 class Crawler(private val seedUrl: String) {
+    private val htmlParser = HtmlParser()
+
     fun start() {
-        println(retrieveWebsiteContents(seedUrl))
+        val seedHtml: String = retrieveWebsiteContents(seedUrl)
+        val urls: Set<String> = htmlParser.findUrls(seedHtml)
     }
 
     private fun retrieveWebsiteContents(url: String): String {
@@ -11,10 +14,10 @@ class Crawler(private val seedUrl: String) {
 }
 
 fun main(args: Array<String>) {
-    println("Starting...")
+    println("Starting...\n\n")
 
-    val crawler = Crawler("http://kotlinlang.org/")
+    val crawler = Crawler("https://kotlinlang.org/")
     crawler.start()
 
-    println("Exiting...")
+    println("\n\nExiting...")
 }
