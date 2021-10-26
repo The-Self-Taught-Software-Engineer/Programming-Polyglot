@@ -5,11 +5,7 @@ class HtmlParser {
         return findUrls(html).map { buildHyperlink(it) }
     }
 
-    private fun findUrls(html: String): Sequence<String> {
-        return A_TAG_PATTERN.findAll(html).mapNotNull { it.groups.get(URL_GROUP_INDEX)?.value }
-    }
-
-    private fun buildHyperlink(url: String): Hyperlink {
+    fun buildHyperlink(url: String): Hyperlink {
         val urlWithoutProtocol = url.substringAfter("://")
         return Hyperlink(
             url = url,
@@ -18,6 +14,10 @@ class HtmlParser {
             domain = parseDomain(urlWithoutProtocol),
             topLevelDomain = urlWithoutProtocol.substringBefore("/").substringAfterLast("."),
         )
+    }
+    
+    private fun findUrls(html: String): Sequence<String> {
+        return A_TAG_PATTERN.findAll(html).mapNotNull { it.groups.get(URL_GROUP_INDEX)?.value }
     }
 
     private fun parseDomain(urlWithoutProtocol: String): String {
