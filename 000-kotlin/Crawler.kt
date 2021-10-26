@@ -41,7 +41,7 @@ class Crawler(private val seedUrl: String) {
 fun main(args: Array<String>) {
     println("Starting...\n\n")
 
-    val crawler = Crawler("https://kotlinlang.org/")
+    val crawler = Crawler(args.firstOrNull() ?: "https://kotlinlang.org/")
     crawler.start()
 
     println("\n\nExiting...")
