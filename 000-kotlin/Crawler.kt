@@ -5,7 +5,9 @@ import java.util.ArrayDeque
 class Crawler(private val seedUrl: String) {
     private val htmlParser = HtmlParser()
 
-    fun start() {
+    fun start(allowedFullDomains: Set<String> = setOf()) {
+        // TODO: Validate 'allowedFullDomains' to be legal domains
+
         val seedHyperlink: Hyperlink = htmlParser.buildHyperlink(seedUrl)
 
         val visitedHyperlinks: MutableSet<Hyperlink> = mutableSetOf()
@@ -23,7 +25,9 @@ class Crawler(private val seedUrl: String) {
             if (html == null) continue
 
             val urls: Set<Hyperlink> = htmlParser.retrieveHyperlinks(html).toSet()
-            urls.forEach { linkQueue.add(it) }
+            urls
+                .filter { if (allowedFullDomains.isNotEmpty()) it in allowedFullDomains else true }
+                .forEach { linkQueue.add(it) }
 
             visitedHyperlinks.add(link)
             visitedDomains.add(link.fullDomain)
@@ -73,7 +77,7 @@ class Crawler(private val seedUrl: String) {
     }
 }
 
-fun main(args: Array<String>) {
+fun run(args: Array<String>) {
     println("Starting...\n\n")
 
     val crawler = Crawler(args.firstOrNull() ?: "https://kotlinlang.org/")
