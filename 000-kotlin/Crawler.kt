@@ -31,11 +31,17 @@ class Crawler(private val seedUrl: String) {
         }
         println("\n\n")
 
-        val protocolStatistics: Map<Protocol, Int> =
-            visitedHyperlinks.groupBy { it.protocol }.mapValues { it.value.count() }
+        val protocolStatistics: Map<String, Int> =
+            buildOccurrenceStatistics(visitedHyperlinks) { it.protocol }
+        val topLevelDomainStatistics: Map<String, Int> =
+            buildOccurrenceStatistics(visitedHyperlinks) { it.topLevelDomain }
+        val rootDomainStatistics: Map<String, Int> =
+            buildOccurrenceStatistics(visitedHyperlinks) { it.rootDomain }
 
         println("Statistics:\n")
         println("Protocol statistics: ${protocolStatistics}")
+        println("Top-level domain statistics: ${topLevelDomainStatistics}")
+        println("Root domain statistics: ${rootDomainStatistics}")
     }
 
     private fun retrieveWebsiteContents(url: String): String? {
@@ -45,6 +51,13 @@ class Crawler(private val seedUrl: String) {
             println("Could not retrieve contents of '$url': ${exception.message}")
             null
         }
+    }
+
+    private fun buildOccurrenceStatistics(
+        hyperlinks: Set<Hyperlink>,
+        keySelector: (Hyperlink) -> Any,
+    ): Map<String, Int> {
+        return hyperlinks.groupBy { keySelector(it).toString() }.mapValues { it.value.count() }
     }
 }
 
