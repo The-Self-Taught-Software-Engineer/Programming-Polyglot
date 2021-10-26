@@ -9,7 +9,7 @@ class Crawler(private val seedUrl: String) {
         val seedHyperlink: Hyperlink = htmlParser.buildHyperlink(seedUrl)
 
         val visitedHyperlinks: MutableSet<Hyperlink> = mutableSetOf()
-        val visitedRootDomains: MutableSet<String> = mutableSetOf()
+        val visitedDomains: MutableSet<String> = mutableSetOf()
 
         val linkQueue: Queue<Hyperlink> = ArrayDeque(setOf(seedHyperlink))
         while (linkQueue.isNotEmpty()) {
@@ -17,6 +17,7 @@ class Crawler(private val seedUrl: String) {
 
             val link: Hyperlink = linkQueue.remove()
             if (link in visitedHyperlinks) continue
+            if (link.fullDomain in visitedDomains) continue
 
             val html: String? = retrieveWebsiteContents(link.url)
             if (html == null) continue
@@ -25,7 +26,7 @@ class Crawler(private val seedUrl: String) {
             urls.forEach { linkQueue.add(it) }
 
             visitedHyperlinks.add(link)
-            visitedRootDomains.add(link.rootDomain)
+            visitedDomains.add(link.fullDomain)
 
             println("Visited ${link.url}")
             println("Currently queued up ${linkQueue.count()} hyperlinks")
@@ -54,11 +55,21 @@ class Crawler(private val seedUrl: String) {
         }
     }
 
+    /**
+    * Returns a map of the selected property of [Hyperlink] as a [String],
+    * with the occurrences of each as the values.
+    * The map is sorted by the values descendingly.
+    */
     private fun buildOccurrenceStatistics(
         hyperlinks: Set<Hyperlink>,
         keySelector: (Hyperlink) -> Any,
     ): Map<String, Int> {
-        return hyperlinks.groupBy { keySelector(it).toString() }.mapValues { it.value.count() }
+        return hyperlinks
+            .groupBy { keySelector(it).toString() }
+            .mapValues { it.value.count() }
+            .toList()
+            .sortedByDescending { (_, value) -> value }
+            .toMap()
     }
 }
 
