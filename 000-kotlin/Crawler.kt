@@ -8,11 +8,12 @@ class Crawler(private val seedUrl: String) {
     fun start() {
         val seedHyperlink: Hyperlink = htmlParser.buildHyperlink(seedUrl)
 
+        val visitedHyperlinks: MutableSet<Hyperlink> = mutableSetOf()
         val visitedRootDomains: MutableSet<String> = mutableSetOf()
 
         val linkQueue: Queue<Hyperlink> = ArrayDeque(setOf(seedHyperlink))
         while (linkQueue.isNotEmpty()) {
-            if (visitedRootDomains.count() > 10) break
+            if (visitedRootDomains.count() > 5) break
 
             val link: Hyperlink = linkQueue.remove()
 
@@ -22,10 +23,19 @@ class Crawler(private val seedUrl: String) {
             val urls: Set<Hyperlink> = htmlParser.retrieveHyperlinks(html).toSet()
             urls.forEach { linkQueue.add(it) }
 
+            visitedHyperlinks.add(link)
             visitedRootDomains.add(link.rootDomain)
 
             println("Visited ${link.url}")
+            println("Currently queued up ${linkQueue.count()} hyperlinks")
         }
+        println("\n\n")
+
+        val protocolStatistics: Map<Protocol, Int> =
+            visitedHyperlinks.groupBy { it.protocol }.mapValues { it.value.count() }
+
+        println("Statistics:\n")
+        println("Protocol statistics: ${protocolStatistics}")
     }
 
     private fun retrieveWebsiteContents(url: String): String? {
