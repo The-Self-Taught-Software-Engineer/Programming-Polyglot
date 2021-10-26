@@ -13,9 +13,10 @@ class Crawler(private val seedUrl: String) {
 
         val linkQueue: Queue<Hyperlink> = ArrayDeque(setOf(seedHyperlink))
         while (linkQueue.isNotEmpty()) {
-            if (visitedRootDomains.count() > 5) break
+            if (visitedHyperlinks.count() > 100) break
 
             val link: Hyperlink = linkQueue.remove()
+            if (link in visitedHyperlinks) continue
 
             val html: String? = retrieveWebsiteContents(link.url)
             if (html == null) continue
