@@ -9,15 +9,19 @@ class HtmlParser {
         val urlWithoutProtocol = url.substringAfter("://")
         return Hyperlink(
             url = url,
-            protocol = Protocol.valueOf(url.substringBefore(":").uppercase()),
+            protocol = parseProtocol(url),
             subdomains = parseSubdomains(urlWithoutProtocol),
             domain = parseDomain(urlWithoutProtocol),
-            topLevelDomain = urlWithoutProtocol.substringBefore("/").substringAfterLast("."),
+            topLevelDomain = parseTopLevelDomain(urlWithoutProtocol),
         )
     }
     
     private fun findUrls(html: String): Sequence<String> {
         return A_TAG_PATTERN.findAll(html).mapNotNull { it.groups.get(URL_GROUP_INDEX)?.value }
+    }
+
+    private fun parseProtocol(url: String): Protocol {
+        return Protocol.valueOf(url.substringBefore(":").uppercase())
     }
 
     private fun parseDomain(urlWithoutProtocol: String): String {
@@ -30,6 +34,10 @@ class HtmlParser {
         return if (hasSubdomain(urlWithoutProtocol)) {
             setOf(urlWithoutProtocol.substringBefore("."))
         } else setOf()
+    }
+
+    private fun parseTopLevelDomain(urlWithoutProtocol: String): String {
+        return urlWithoutProtocol.substringBefore("/").substringBefore("?").substringAfterLast(".")
     }
 
     private fun hasSubdomain(urlWithoutProtocol: String): Boolean {
