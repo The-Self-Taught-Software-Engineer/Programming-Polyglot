@@ -1,4 +1,4 @@
-enum class Protocol {
-    HTTP,
-    HTTPS;
+enum class Protocol(val literal: String) {
+    HTTP("http://"),
+    HTTPS("https://");
 }
