@@ -2,10 +2,15 @@ import java.net.URL
 import java.util.Queue
 import java.util.ArrayDeque
 
-class Crawler(private val seedUrl: String) {
+class Crawler {
     private val htmlParser = HtmlParser()
 
-    fun start(allowedFullDomains: Set<String> = setOf()) {
+    fun start(
+        seedUrl: String,
+        allowedFullDomains: Set<String> = setOf(),
+        allowedPatterns: Set<Regex> = setOf(Regex(".*")),
+        maxHops: Int = 100,
+    ): Set<Hyperlink> {
         // TODO: Validate 'allowedFullDomains' to be legal domains
 
         val seedHyperlink: Hyperlink = htmlParser.buildHyperlink(seedUrl)
@@ -15,18 +20,25 @@ class Crawler(private val seedUrl: String) {
 
         val linkQueue: Queue<Hyperlink> = ArrayDeque(setOf(seedHyperlink))
         while (linkQueue.isNotEmpty()) {
-            if (visitedHyperlinks.count() > 100) break
+            if (visitedHyperlinks.count() >= maxHops) break
 
             val link: Hyperlink = linkQueue.remove()
             if (link in visitedHyperlinks) continue
-            if (link.fullDomain in visitedDomains) continue
+            if (allowedFullDomains.isEmpty() && link.fullDomain in visitedDomains) continue
 
             val html: String? = retrieveWebsiteContents(link.url)
             if (html == null) continue
 
-            val urls: Set<Hyperlink> = htmlParser.retrieveHyperlinks(html).toSet()
+            val urls: Set<Hyperlink> = htmlParser.retrieveHyperlinks(link, html).toSet()
             urls
-                .filter { if (allowedFullDomains.isNotEmpty()) it in allowedFullDomains else true }
+                .filter {
+                    if (allowedFullDomains.isNotEmpty()) {
+                        it.fullDomain in allowedFullDomains
+                    } else true
+                }
+                .filter { hyperlink: Hyperlink ->
+                    allowedPatterns.all { it.containsMatchIn(hyperlink.url) }
+                }
                 .forEach { linkQueue.add(it) }
 
             visitedHyperlinks.add(link)
@@ -48,6 +60,8 @@ class Crawler(private val seedUrl: String) {
         println("Protocol statistics: ${protocolStatistics}")
         println("Top-level domain statistics: ${topLevelDomainStatistics}")
         println("Root domain statistics: ${rootDomainStatistics}")
+
+        return visitedHyperlinks
     }
 
     private fun retrieveWebsiteContents(url: String): String? {
@@ -77,11 +91,11 @@ class Crawler(private val seedUrl: String) {
     }
 }
 
-fun run(args: Array<String>) {
-    println("Starting...\n\n")
+// fun run(args: Array<String>) {
+//     println("Starting...\n\n")
 
-    val crawler = Crawler(args.firstOrNull() ?: "https://kotlinlang.org/")
-    crawler.start()
+//     val crawler = Crawler(args.firstOrNull() ?: "https://kotlinlang.org/")
+//     crawler.start()
 
-    println("\n\nExiting...")
-}
+//     println("\n\nExiting...")
+// }
