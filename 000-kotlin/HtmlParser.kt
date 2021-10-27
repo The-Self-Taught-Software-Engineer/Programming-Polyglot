@@ -1,15 +1,18 @@
 import kotlin.text.Regex
 
 class HtmlParser {
-    fun retrieveHyperlinks(html: String): Sequence<Hyperlink> {
-        return findUrls(html).map { buildHyperlink(it) }
+    fun retrieveHyperlinks(currentLink: Hyperlink, html: String): Sequence<Hyperlink> {
+        return findUrls(html).map { buildHyperlink(it, currentLink) }
     }
 
-    fun buildHyperlink(url: String): Hyperlink {
-        val urlWithoutProtocol = url.substringAfter("://")
+    fun buildHyperlink(url: String, currentLink: Hyperlink? = null): Hyperlink {
+        val completeUrl = if (currentLink != null && url.startsWith("/")) {
+            "${currentLink.protocol.literal}${currentLink.fullDomain}${url}"
+        } else url
+        val urlWithoutProtocol = completeUrl.substringAfter("://")
         return Hyperlink(
-            url = url,
-            protocol = parseProtocol(url),
+            url = completeUrl,
+            protocol = parseProtocol(completeUrl),
             subdomains = parseSubdomains(urlWithoutProtocol),
             domain = parseDomain(urlWithoutProtocol),
             topLevelDomain = parseTopLevelDomain(urlWithoutProtocol),
@@ -45,8 +48,8 @@ class HtmlParser {
     }
 
     companion object {
-        // Play around with this pattern: https://regex101.com/r/N9hj8H/1
-        private val A_TAG_PATTERN: Regex = Regex("<a(?:[^>]*)href=(['\\\"])(http.+?)\\1")
+        // Play around with this pattern: https://regex101.com/r/2AAFTe/1
+        private val A_TAG_PATTERN: Regex = Regex("<a(?:[^>]*)href=(['\\\"])([(http)(/)].+?)\\1")
         // The group that matches the actual URL in the a-tag
         private const val URL_GROUP_INDEX: Int = 2
     }
