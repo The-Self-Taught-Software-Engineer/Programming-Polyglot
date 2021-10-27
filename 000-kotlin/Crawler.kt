@@ -9,18 +9,18 @@ class Crawler {
         seedUrl: String,
         allowedFullDomains: Set<String> = setOf(),
         allowedPatterns: Set<Regex> = setOf(Regex(".*")),
-        maxHops: Int = 100,
-    ): Set<Hyperlink> {
+        maxVisited: Int = 100,
+    ): LinkedHashSet<Hyperlink> {
         // TODO: Validate 'allowedFullDomains' to be legal domains
 
         val seedHyperlink: Hyperlink = htmlParser.buildHyperlink(seedUrl)
 
-        val visitedHyperlinks: MutableSet<Hyperlink> = mutableSetOf()
+        val visitedHyperlinks: LinkedHashSet<Hyperlink> = LinkedHashSet()
         val visitedDomains: MutableSet<String> = mutableSetOf()
 
         val linkQueue: Queue<Hyperlink> = ArrayDeque(setOf(seedHyperlink))
         while (linkQueue.isNotEmpty()) {
-            if (visitedHyperlinks.count() >= maxHops) break
+            if (visitedHyperlinks.count() >= maxVisited) break
 
             val link: Hyperlink = linkQueue.remove()
             if (link in visitedHyperlinks) continue
