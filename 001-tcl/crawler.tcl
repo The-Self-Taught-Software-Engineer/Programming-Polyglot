@@ -18,6 +18,14 @@ proc getUrlHtml {url} {
     return $html
 }
 
+proc parseHyperlink {url} {
+    regexp -nocase {(https?)://.+?\.(.+?)\/} $url _ protocol topLevelDomain
+    if {[info exists protocol] == 0} {
+        return ""
+    }
+    return [dict create url $url protocol $protocol topLevelDomain $topLevelDomain]
+}
+
 proc findAllHyperlinks {url} {
     variable htmlTree [getUrlHtml $url]
 
@@ -26,12 +34,9 @@ proc findAllHyperlinks {url} {
         variable type [$htmlTree get $node type]
         if {$type == "a"} {
             variable tags [$htmlTree get $node data]
-            regexp -nocase {href=(['\"])([(http)].+?)\1} $tags fullMatch quote link
+            regexp -nocase {href=(['\"])([(http)].+?)\1} $tags _ quote link
             if {[info exists link] == 1} {
-                # if {[string match "/" $match2]} {
-                #     variable match2 "$match2"
-                # }
-                lappend hyperlinks $link
+                lappend hyperlinks [parseHyperlink $link]
             }
         }
     }
@@ -39,12 +44,16 @@ proc findAllHyperlinks {url} {
 }
 
 variable linksToVisit [struct::queue]
-$linksToVisit put $seed
+$linksToVisit put [parseHyperlink $seed]
 
 variable visitedLinks {}
 
 while {[$linksToVisit size] > 0} {
-    variable linkToVisit [$linksToVisit get]
+    variable hyperlink [$linksToVisit get]
+
+    if {$hyperlink == ""} {continue}
+    variable linkToVisit [dict get $hyperlink url]
+
     if {[lsearch $visitedLinks $linkToVisit] != -1} {continue}
     lappend visitedLinks $linkToVisit
 
