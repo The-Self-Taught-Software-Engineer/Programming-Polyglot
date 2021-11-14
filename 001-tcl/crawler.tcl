@@ -18,19 +18,33 @@ proc getUrlHtml {url} {
     return $html
 }
 
-proc findAllHyperlinks {htmlTree} {
+proc findAllHyperlinks {url} {
+    variable htmlTree [getUrlHtml $url]
+
     variable hyperlinks {}
     $htmlTree walk [$htmlTree rootname] -type bfs node {
         variable type [$htmlTree get $node type]
         if {$type == "a"} {
             variable tags [$htmlTree get $node data]
-            regexp -nocase {href=(['\"])([(http)(/)].+?)\1} $tags fullMatch match1 match2
-            if {$match2 != ""} {
-                lappend hyperlinks $match2
+            regexp -nocase {href=(['\"])([(http)].+?)\1} $tags fullMatch quote link
+            if {[info exists link] == 1} {
+                # if {[string match "/" $match2]} {
+                #     variable match2 "$match2"
+                # }
+                lappend hyperlinks $link
             }
         }
     }
     return $hyperlinks
 }
 
-variable links [findAllHyperlinks [getUrlHtml $seed]]
+variable linksToVisit [struct::queue]
+$linksToVisit put $seed
+while {[$linksToVisit size] > 0} {
+    variable visited [$linksToVisit get]
+    puts "Visited: $visited"
+     
+    variable newLinks [findAllHyperlinks $visited]
+
+    foreach link $newLinks {$linksToVisit put $link}
+}
