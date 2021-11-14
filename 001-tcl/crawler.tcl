@@ -40,11 +40,16 @@ proc findAllHyperlinks {url} {
 
 variable linksToVisit [struct::queue]
 $linksToVisit put $seed
+
+variable visitedLinks {}
+
 while {[$linksToVisit size] > 0} {
-    variable visited [$linksToVisit get]
-    puts "Visited: $visited"
-     
-    variable newLinks [findAllHyperlinks $visited]
+    variable linkToVisit [$linksToVisit get]
+    if {[lsearch $visitedLinks $linkToVisit] != -1} {continue}
+    lappend visitedLinks $linkToVisit
+
+    variable newLinks [findAllHyperlinks $linkToVisit]
+    puts "Visited: $linkToVisit"
 
     foreach link $newLinks {$linksToVisit put $link}
 }
